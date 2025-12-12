@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Replacement Algorithm Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #8892b0;
+            font-size: 1.1rem;
+        }
+
+        .input-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+        }
+
+        .input-field {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .input-field label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccd6f6;
+            font-weight: 500;
+        }
+
+        .input-field input, .input-field select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-field input:focus, .input-field select:focus {
+            outline: none;
+            border-color: #3a7bd5;
+            box-shadow: 0 0 15px rgba(58, 123, 213, 0.3);
+        }
+
+        .input-field select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(58, 123, 213, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-compare {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: #fff;
+        }
+
+        .btn-compare:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(245, 87, 108, 0.4);
+        }
+
+        .algorithm-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            background: transparent;
+            color: #8892b0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+            border-color: transparent;
+            color: #fff;
+        }
+
+        .tab-btn:hover:not(.active) {
+            border-color: #3a7bd5;
+            color: #fff;
+        }
+
+        .results-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .result-card h3 {
+            color: #ccd6f6;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-card h3 .icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .fifo-icon { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .lru-icon { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .optimal-icon { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .lfu-icon { background: linear-gradient(135deg, #f7971e, #ffd200); }
+        .mfu-icon { background: linear-gradient(135deg, #11998e, #38ef7d); }
+        .nru-icon { background: linear-gradient(135deg, #ee0979, #ff6a00); }
+        .lifo-icon { background: linear-gradient(135deg, #8e2de2, #4a00e0); }
+
+        .visualization-container {
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+
+        .step-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        .step-table th, .step-table td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .step-table th {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ccd6f6;
+            font-weight: 600;
+        }
+
+        .step-table td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .page-cell {
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .page-hit {
+            background: linear-gradient(135deg, #00b09b, #96c93d);
+            color: #fff;
+        }
+
+        .page-fault {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+            color: #fff;
+        }
+
+        .frame-cell {
+            min-width: 40px;
+            padding: 5px;
+        }
+
+        .frame-value {
+            background: rgba(58, 123, 213, 0.3);
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: inline-block;
+            min-width: 30px;
+        }
+
+        .frame-value.new-entry {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            animation: pulse 0.5s ease;
+        }
+
+        .frame-value.replaced {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metric-label {
+            color: #8892b0;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .comparison-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .comparison-section h2 {
+            color: #ccd6f6;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .chart-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .chart-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .chart-card h4 {
+            color: #ccd6f6;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 200px;
+            padding: 10px;
+        }
+
+        .bar-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bar {
+            width: 45px;
+            border-radius: 5px 5px 0 0;
+            transition: height 0.5s ease;
+            position: relative;
+        }
+
+        .bar-fifo { background: linear-gradient(180deg, #667eea, #764ba2); }
+        .bar-lru { background: linear-gradient(180deg, #f093fb, #f5576c); }
+        .bar-optimal { background: linear-gradient(180deg, #4facfe, #00f2fe); }
+        .bar-lfu { background: linear-gradient(180deg, #f7971e, #ffd200); }
+        .bar-mfu { background: linear-gradient(180deg, #11998e, #38ef7d); }
+        .bar-nru { background: linear-gradient(180deg, #ee0979, #ff6a00); }
+        .bar-lifo { background: linear-gradient(180deg, #8e2de2, #4a00e0); }
+
+        .bar-value {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .bar-label {
+            color: #8892b0;
+            font-size: 0.85rem;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+        }
+
+        .legend-text {
+            color: #8892b0;
+            font-size: 0.9rem;
+        }
+
+        .info-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-section h2 {
+            color: #ccd6f6;
+            margin-bottom: 20px;
+        }
+
+        .algorithm-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid;
+        }
+
+        .info-card.fifo { border-color: #764ba2; }
+        .info-card.lru { border-color: #f5576c; }
+        .info-card.optimal { border-color: #00f2fe; }
+        .info-card.lfu { border-color: #ffd200; }
+        .info-card.mfu { border-color: #38ef7d; }
+        .info-card.nru { border-color: #ff6a00; }
+        .info-card.lifo { border-color: #4a00e0; }
+
+        .info-card h4 {
+            color: #ccd6f6;
+            margin-bottom: 10px;
+        }
+
+        .info-card p {
+            color: #8892b0;
+            line-height: 1.6;
+        }
+
+        .step-animation {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .step-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .step-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .step-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .step-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .speed-control label {
+            color: #8892b0;
+        }
+
+        .speed-control input[type="range"] {
+            width: 100px;
+        }
+
+        .current-step-info {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: #ccd6f6;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .results-section {
+                grid-template-columns: 1fr;
+            }
+
+            .bar {
+                width: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔄 Page Replacement Algorithm Simulator</h1>
+            <p>Visualize and compare FIFO, LRU, Optimal, LFU, MFU, NRU & LIFO page replacement algorithms</p>
+        </header>
+
+        <div class="input-section">
+            <div class="input-group">
+                <div class="input-field">
+                    <label for="pageSequence">Page Reference String (comma-separated)</label>
+                    <input type="text" id="pageSequence" placeholder="e.g., 7,0,1,2,0,3,0,4,2,3,0,3,2" value="7,0,1,2,0,3,0,4,2,3,0,3,2">
+                </div>
+                <div class="input-field">
+                    <label for="frameCount">Number of Frames</label>
+                    <input type="number" id="frameCount" min="1" max="10" value="3">
+                </div>
+                <div class="input-field">
+                    <label for="algorithm">Algorithm</label>
+                    <select id="algorithm">
+                        <option value="all">All Algorithms</option>
+                        <option value="fifo">FIFO (First In First Out)</option>
+                        <option value="lru">LRU (Least Recently Used)</option>
+                        <option value="optimal">Optimal</option>
+                        <option value="lfu">LFU (Least Frequently Used)</option>
+                        <option value="mfu">MFU (Most Frequently Used)</option>
+                        <option value="nru">NRU (Not Recently Used)</option>
+                        <option value="lifo">LIFO (Last In First Out)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="input-group" style="margin-top: 20px;">
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="runSimulation()">
+                        ▶️ Run Simulation
+                    </button>
+                    <button class="btn btn-secondary" onclick="generateRandom()">
+                        🎲 Random Sequence
+                    </button>
+                    <button class="btn btn-compare" onclick="runComparison()">
+                        📊 Compare All
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetSimulation()">
+                        🔄 Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="resultsContainer" class="results-section hidden">
+            <!-- FIFO Result Card -->
+            <div id="fifoResult" class="result-card hidden">
+                <h3>
+                    <span class="icon fifo-icon">F</span>
+                    FIFO Algorithm
+                </h3>
+                <div class="step-animation">
+                    <div class="step-controls">
+                        <button class="step-btn" onclick="stepBack('fifo')">⏮️ Prev</button>
+                        <button class="step-btn" onclick="stepForward('fifo')">Next ⏭️</button>
+                        <button class="step-btn" onclick="playAnimation('fifo')">▶️ Play</button>
+                        <button class="step-btn" onclick="pauseAnimation('fifo')">⏸️ Pause</button>
+                    </div>
+                    <div class="speed-control">
+                        <label>Speed:</label>
+                        <input type="range" min="100" max="2000" value="500" id="fifoSpeed">
+                    </div>
+                </div>
+                <div class="current-step-info" id="fifoStepInfo">Step: 0 / 0</div>
+                <div class="visualization-container">
+                    <table class="step-table" id="fifoTable"></table>
+                </div>
+                <div class="metrics-grid" id="fifoMetrics"></div>
+            </div>
+
+            <!-- LRU Result Card -->
+            <div id="lruResult" class="result-card hidden">
+                <h3>
+                    <span class="icon lru-icon">L</span>
+                    LRU Algorithm
+                </h3>
+                <div class="step-animation">
+                    <div class="step-controls">
+                        <button class="step-btn" onclick="stepBack('lru')">⏮️ Prev</button>
+                        <button class="step-btn" onclick="stepForward('lru')">Next ⏭️</button>
+                        <button class="step-btn" onclick="playAnimation('lru')">▶️ Play</button>
+                        <button class="step-btn" onclick="pauseAnimation('lru')">⏸️ Pause</button>
+                    </div>
+                    <div class="speed-control">
+                        <label>Speed:</label>
+                        <input type="range" min="100" max="2000" value="500" id="lruSpeed">
+                    </div>
+                </div>
+                <div class="current-step-info" id="lruStepInfo">Step: 0 / 0</div>
+                <div class="visualization-container">
+                    <table class="step-table" id="lruTable"></table>
+                </div>
+                <div class="metrics-grid" id="lruMetrics"></div>
+            </div>
+
+            <!-- Optimal Result Card -->
+            <div id="optimalResult" class="result-card hidden">
+                <h3>
+                    <span class="icon optimal-icon">O</span>
+                    Optimal Algorithm
+                </h3>
+                <div class="step-animation">
+                    <div class="step-controls">
+                        <button class="step-btn" onclick="stepBack('optimal')">⏮️ Prev</button>
+                        <button class="step-btn" onclick="stepForward('optimal')">Next ⏭️</button>
+                        <button class="step-btn" onclick="playAnimation('optimal')">▶️ Play</button>
+                        <button class="step-btn" onclick="pauseAnimation('optimal')">⏸️ Pause</button>
+                    </div>
+                    <div class="speed-control">
+                        <label>Speed:</label>
+                        <input type="range" min="100" max="2000" value="500" id="optimalSpeed">
+                    </div>
+                </div>
+                <div class="current-step-info" id="optimalStepInfo">Step: 0 / 0</div>
+                <div class="visualization-container">
+                    <table class="step-table" id="optimalTable"></table>
+                </div>
+                <div class="metrics-grid" id="optimalMetrics"></div>
+            </div>
+
+            <!-- LFU Result Card -->
+            <div id="lfuResult" class="result-card hidden">
+                <h3><span class="icon lfu-icon">LF</span>LFU Algorithm</h3>
+                <div class="step-animation">
+                    <div class="step-controls">
+                        <button class="step-btn" onclick="stepBack('lfu')">⏮️ Prev</button>
+                        <button class="step-btn" onclick="stepForward('lfu')">Next ⏭️</button>
+                        <button class="step-btn" onclick="playAnimation('lfu')">▶️ Play</button>
+                        <button class="step-btn" onclick="pauseAnimation('lfu')">⏸️ Pause</button>
+                    </div>
+                    <div class="speed-control">
+                        <label>Speed:</label>
+                        <input type="range" min="100" max="2000" value="500" id="lfuSpeed">
+                    </div>
+                </div>
+                <div class="current-step-info" id="lfuStepInfo">Step: 0 / 0</div>
+                <div class="visualization-container">
+                    <table class="step-table" id="lfuTable"></table>
+                </div>
+                <div class="metrics-grid" id="lfuMetrics"></div>
+            </div>
+
+            <!-- MFU Result Card -->
+            <div id="mfuResult" class="result-card hidden">
+                <h3><span class="icon mfu-icon">MF</span>MFU Algorithm</h3>
+                <div class="step-animation">
+                    <div class="step-controls">
+                        <button class="step-btn" onclick="stepBack('mfu')">⏮️ Prev</button>
+                        <button class="step-btn" onclick="stepForward('mfu')">Next ⏭️</button>
+                        <button class="step-btn" onclick="playAnimation('mfu')">▶️ Play</button>
+                        <button class="step-btn" onclick="pauseAnimation('mfu')">⏸️ Pause</button>
+                    </div>
+                    <div class="speed-control">
+                        <label>Speed:</label>
+                        <input type="range" min="100" max="2000" value="500" id="mfuSpeed">
+                    </div>
+                </div>
+                <div class="current-step-info" id="mfuStepInfo">Step: 0 / 0</div>
+                <div class="visualization-container">
+                    <table class="step-table" id="mfuTable"></table>
+                </div>
+                <div class="metrics-grid" id="mfuMetrics"></div>
+            </div>
+
+            <!-- NRU Result Card -->
+            <div id="nruResult" class="result-card hidden">
+                <h3><span class="icon nru-icon">NR</span>NRU Algorithm</h3>
+                <div class="step-animation">
+                    <div class="step-controls">
+                        <button class="step-btn" onclick="stepBack('nru')">⏮️ Prev</button>
+                        <button class="step-btn" onclick="stepForward('nru')">Next ⏭️</button>
+                        <button class="step-btn" onclick="playAnimation('nru')">▶️ Play</button>
+                        <button class="step-btn" onclick="pauseAnimation('nru')">⏸️ Pause</button>
+                    </div>
+                    <div class="speed-control">
+                        <label>Speed:</label>
+                        <input type="range" min="100" max="2000" value="500" id="nruSpeed">
+                    </div>
+                </div>
+                <div class="current-step-info" id="nruStepInfo">Step: 0 / 0</div>
+                <div class="visualization-container">
+                    <table class="step-table" id="nruTable"></table>
+                </div>
+                <div class="metrics-grid" id="nruMetrics"></div>
+            </div>
+
+            <!-- LIFO Result Card -->
+            <div id="lifoResult" class="result-card hidden">
+                <h3><span class="icon lifo-icon">LI</span>LIFO Algorithm</h3>
+                <div class="step-animation">
+                    <div class="step-controls">
+                        <button class="step-btn" onclick="stepBack('lifo')">⏮️ Prev</button>
+                        <button class="step-btn" onclick="stepForward('lifo')">Next ⏭️</button>
+                        <button class="step-btn" onclick="playAnimation('lifo')">▶️ Play</button>
+                        <button class="step-btn" onclick="pauseAnimation('lifo')">⏸️ Pause</button>
+                    </div>
+                    <div class="speed-control">
+                        <label>Speed:</label>
+                        <input type="range" min="100" max="2000" value="500" id="lifoSpeed">
+                    </div>
+                </div>
+                <div class="current-step-info" id="lifoStepInfo">Step: 0 / 0</div>
+                <div class="visualization-container">
+                    <table class="step-table" id="lifoTable"></table>
+                </div>
+                <div class="metrics-grid" id="lifoMetrics"></div>
+            </div>
+        </div>
+
+        <div id="comparisonSection" class="comparison-section hidden">
+            <h2>📊 Algorithm Comparison</h2>
+            <div class="chart-container">
+                <div class="chart-card">
+                    <h4>Page Faults</h4>
+                    <div class="bar-chart" id="faultsChart"></div>
+                </div>
+                <div class="chart-card">
+                    <h4>Hit Ratio (%)</h4>
+                    <div class="bar-chart" id="hitRatioChart"></div>
+                </div>
+            </div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(180deg, #667eea, #764ba2);"></div>
+                    <span class="legend-text">FIFO</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(180deg, #f093fb, #f5576c);"></div>
+                    <span class="legend-text">LRU</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(180deg, #4facfe, #00f2fe);"></div>
+                    <span class="legend-text">Optimal</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(180deg, #f7971e, #ffd200);"></div>
+                    <span class="legend-text">LFU</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(180deg, #11998e, #38ef7d);"></div>
+                    <span class="legend-text">MFU</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(180deg, #ee0979, #ff6a00);"></div>
+                    <span class="legend-text">NRU</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(180deg, #8e2de2, #4a00e0);"></div>
+                    <span class="legend-text">LIFO</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>📚 Algorithm Information</h2>
+            <div class="algorithm-info">
+                <div class="info-card fifo">
+                    <h4>FIFO (First In First Out)</h4>
+                    <p>The oldest page in memory is replaced first. Simple to implement using a queue data structure. May suffer from Belady's anomaly where increasing frames can increase page faults.</p>
+                </div>
+                <div class="info-card lru">
+                    <h4>LRU (Least Recently Used)</h4>
+                    <p>Replaces the page that hasn't been used for the longest time. Based on temporal locality principle. More complex to implement but generally performs better than FIFO.</p>
+                </div>
+                <div class="info-card optimal">
+                    <h4>Optimal (OPT)</h4>
+                    <p>Replaces the page that won't be used for the longest time in the future. Theoretically optimal but impossible to implement in practice as it requires future knowledge. Used as a benchmark.</p>
+                </div>
+                <div class="info-card lfu">
+                    <h4>LFU (Least Frequently Used)</h4>
+                    <p>Maintains a count of page references and replaces the page with the lowest access frequency. Good for identifying pages that aren't used often. Drawback: A heavily used page in the past may stay in memory even if no longer needed.</p>
+                </div>
+                <div class="info-card mfu">
+                    <h4>MFU (Most Frequently Used)</h4>
+                    <p>Replaces the page with the highest access frequency, based on the idea that frequently used pages were likely just brought in and won't be needed again soon. Counterintuitive but useful in specific workloads.</p>
+                </div>
+                <div class="info-card nru">
+                    <h4>NRU (Not Recently Used)</h4>
+                    <p>Uses referenced bits to categorize pages, favoring keeping recently used pages in memory. A simpler approximation of LRU that uses hardware-supported access bits. Clears reference bits periodically.</p>
+                </div>
+                <div class="info-card lifo">
+                    <h4>LIFO (Last In First Out)</h4>
+                    <p>Replaces the most recently added page. Opposite of FIFO. Rarely used in practice due to poor performance in most scenarios. Can suffer from Belady's Anomaly.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state for animations
+        let animationState = {
+            fifo: { currentStep: 0, totalSteps: 0, interval: null, results: null },
+            lru: { currentStep: 0, totalSteps: 0, interval: null, results: null },
+            optimal: { currentStep: 0, totalSteps: 0, interval: null, results: null },
+            lfu: { currentStep: 0, totalSteps: 0, interval: null, results: null },
+            mfu: { currentStep: 0, totalSteps: 0, interval: null, results: null },
+            nru: { currentStep: 0, totalSteps: 0, interval: null, results: null },
+            lifo: { currentStep: 0, totalSteps: 0, interval: null, results: null }
+        };
+
+        // Parse page sequence from input
+        function parsePageSequence() {
+            const input = document.getElementById('pageSequence').value;
+            return input.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+        }
+
+        // Generate random page sequence
+        function generateRandom() {
+            const length = Math.floor(Math.random() * 10) + 10;
+            const maxPage = Math.floor(Math.random() * 5) + 5;
+            const sequence = [];
+            for (let i = 0; i < length; i++) {
+                sequence.push(Math.floor(Math.random() * maxPage));
+            }
+            document.getElementById('pageSequence').value = sequence.join(',');
+        }
+
+        // FIFO Algorithm
+        function fifoAlgorithm(pages, frameCount) {
+            const frames = [];
+            const steps = [];
+            let pageFaults = 0;
+            let pageHits = 0;
+            let queue = [];
+
+            for (let i = 0; i < pages.length; i++) {
+                const page = pages[i];
+                const step = {
+                    page: page,
+                    frames: [...frames],
+                    isPageFault: false,
+                    replacedPage: null,
+                    newPage: null
+                };
+
+                if (frames.includes(page)) {
+                    pageHits++;
+                    step.isPageFault = false;
+                } else {
+                    pageFaults++;
+                    step.isPageFault = true;
+                    step.newPage = page;
+
+                    if (frames.length < frameCount) {
+                        frames.push(page);
+                        queue.push(page);
+                    } else {
+                        const oldPage = queue.shift();
+                        const index = frames.indexOf(oldPage);
+                        step.replacedPage = oldPage;
+                        frames[index] = page;
+                        queue.push(page);
+                    }
+                }
+
+                step.framesAfter = [...frames];
+                steps.push(step);
+            }
+
+            return {
+                steps,
+                pageFaults,
+                pageHits,
+                hitRatio: ((pageHits / pages.length) * 100).toFixed(2)
+            };
+        }
+
+        // LRU Algorithm
+        function lruAlgorithm(pages, frameCount) {
+            const frames = [];
+            const steps = [];
+            let pageFaults = 0;
+            let pageHits = 0;
+            let recentlyUsed = [];
+
+            for (let i = 0; i < pages.length; i++) {
+                const page = pages[i];
+                const step = {
+                    page: page,
+                    frames: [...frames],
+                    isPageFault: false,
+                    replacedPage: null,
+                    newPage: null
+                };
+
+                if (frames.includes(page)) {
+                    pageHits++;
+                    step.isPageFault = false;
+                    // Update recently used
+                    recentlyUsed = recentlyUsed.filter(p => p !== page);
+                    recentlyUsed.push(page);
+                } else {
+                    pageFaults++;
+                    step.isPageFault = true;
+                    step.newPage = page;
+
+                    if (frames.length < frameCount) {
+                        frames.push(page);
+                        recentlyUsed.push(page);
+                    } else {
+                        const lruPage = recentlyUsed.shift();
+                        const index = frames.indexOf(lruPage);
+                        step.replacedPage = lruPage;
+                        frames[index] = page;
+                        recentlyUsed.push(page);
+                    }
+                }
+
+                step.framesAfter = [...frames];
+                steps.push(step);
+            }
+
+            return {
+                steps,
+                pageFaults,
+                pageHits,
+                hitRatio: ((pageHits / pages.length) * 100).toFixed(2)
+            };
+        }
+
+        // Optimal Algorithm
+        function optimalAlgorithm(pages, frameCount) {
+            const frames = [];
+            const steps = [];
+            let pageFaults = 0;
+            let pageHits = 0;
+
+            for (let i = 0; i < pages.length; i++) {
+                const page = pages[i];
+                const step = {
+                    page: page,
+                    frames: [...frames],
+                    isPageFault: false,
+                    replacedPage: null,
+                    newPage: null
+                };
+
+                if (frames.includes(page)) {
+                    pageHits++;
+                    step.isPageFault = false;
+                } else {
+                    pageFaults++;
+                    step.isPageFault = true;
+                    step.newPage = page;
+
+                    if (frames.length < frameCount) {
+                        frames.push(page);
+                    } else {
+                        // Find page to replace (used farthest in future)
+                        let farthest = -1;
+                        let pageToReplace = frames[0];
+
+                        for (const frame of frames) {
+                            let nextUse = pages.slice(i + 1).indexOf(frame);
+                            if (nextUse === -1) {
+                                pageToReplace = frame;
+                                break;
+                            }
+                            if (nextUse > farthest) {
+                                farthest = nextUse;
+                                pageToReplace = frame;
+                            }
+                        }
+
+                        const index = frames.indexOf(pageToReplace);
+                        step.replacedPage = pageToReplace;
+                        frames[index] = page;
+                    }
+                }
+
+                step.framesAfter = [...frames];
+                steps.push(step);
+            }
+
+            return {
+                steps,
+                pageFaults,
+                pageHits,
+                hitRatio: ((pageHits / pages.length) * 100).toFixed(2)
+            };
+        }
+
+        // LFU Algorithm
+        function lfuAlgorithm(pages, frameCount) {
+            const frames = [];
+            const steps = [];
+            const frequency = {};
+            let pageFaults = 0, pageHits = 0;
+
+            for (let i = 0; i < pages.length; i++) {
+                const page = pages[i];
+                const step = { page, frames: [...frames], isPageFault: false, replacedPage: null, newPage: null };
+
+                if (frames.includes(page)) {
+                    pageHits++;
+                    frequency[page]++;
+                } else {
+                    pageFaults++;
+                    step.isPageFault = true;
+                    step.newPage = page;
+
+                    if (frames.length < frameCount) {
+                        frames.push(page);
+                        frequency[page] = 1;
+                    } else {
+                        let minFreq = Infinity, lfuPage = frames[0];
+                        for (const f of frames) {
+                            if (frequency[f] < minFreq) {
+                                minFreq = frequency[f];
+                                lfuPage = f;
+                            }
+                        }
+                        const index = frames.indexOf(lfuPage);
+                        step.replacedPage = lfuPage;
+                        delete frequency[lfuPage];
+                        frames[index] = page;
+                        frequency[page] = 1;
+                    }
+                }
+                step.framesAfter = [...frames];
+                steps.push(step);
+            }
+            return { steps, pageFaults, pageHits, hitRatio: ((pageHits / pages.length) * 100).toFixed(2) };
+        }
+
+        // MFU Algorithm
+        function mfuAlgorithm(pages, frameCount) {
+            const frames = [];
+            const steps = [];
+            const frequency = {};
+            let pageFaults = 0, pageHits = 0;
+
+            for (let i = 0; i < pages.length; i++) {
+                const page = pages[i];
+                const step = { page, frames: [...frames], isPageFault: false, replacedPage: null, newPage: null };
+
+                if (frames.includes(page)) {
+                    pageHits++;
+                    frequency[page]++;
+                } else {
+                    pageFaults++;
+                    step.isPageFault = true;
+                    step.newPage = page;
+
+                    if (frames.length < frameCount) {
+                        frames.push(page);
+                        frequency[page] = 1;
+                    } else {
+                        let maxFreq = -1, mfuPage = frames[0];
+                        for (const f of frames) {
+                            if (frequency[f] > maxFreq) {
+                                maxFreq = frequency[f];
+                                mfuPage = f;
+                            }
+                        }
+                        const index = frames.indexOf(mfuPage);
+                        step.replacedPage = mfuPage;
+                        delete frequency[mfuPage];
+                        frames[index] = page;
+                        frequency[page] = 1;
+                    }
+                }
+                step.framesAfter = [...frames];
+                steps.push(step);
+            }
+            return { steps, pageFaults, pageHits, hitRatio: ((pageHits / pages.length) * 100).toFixed(2) };
+        }
+
+        // NRU Algorithm (simplified - uses reference bit)
+        function nruAlgorithm(pages, frameCount) {
+            const frames = [];
+            const steps = [];
+            const refBit = {};
+            let pageFaults = 0, pageHits = 0;
+
+            for (let i = 0; i < pages.length; i++) {
+                const page = pages[i];
+                const step = { page, frames: [...frames], isPageFault: false, replacedPage: null, newPage: null };
+
+                if (frames.includes(page)) {
+                    pageHits++;
+                    refBit[page] = 1;
+                } else {
+                    pageFaults++;
+                    step.isPageFault = true;
+                    step.newPage = page;
+
+                    if (frames.length < frameCount) {
+                        frames.push(page);
+                        refBit[page] = 1;
+                    } else {
+                        let victim = null;
+                        // Find page with refBit = 0
+                        for (const f of frames) {
+                            if (refBit[f] === 0) { victim = f; break; }
+                        }
+                        // If all have refBit = 1, clear all and pick first
+                        if (!victim) {
+                            for (const f of frames) refBit[f] = 0;
+                            victim = frames[0];
+                        }
+                        const index = frames.indexOf(victim);
+                        step.replacedPage = victim;
+                        delete refBit[victim];
+                        frames[index] = page;
+                        refBit[page] = 1;
+                    }
+                }
+                step.framesAfter = [...frames];
+                steps.push(step);
+            }
+            return { steps, pageFaults, pageHits, hitRatio: ((pageHits / pages.length) * 100).toFixed(2) };
+        }
+
+        // LIFO Algorithm
+        function lifoAlgorithm(pages, frameCount) {
+            const frames = [];
+            const steps = [];
+            const stack = [];
+            let pageFaults = 0, pageHits = 0;
+
+            for (let i = 0; i < pages.length; i++) {
+                const page = pages[i];
+                const step = { page, frames: [...frames], isPageFault: false, replacedPage: null, newPage: null };
+
+                if (frames.includes(page)) {
+                    pageHits++;
+                } else {
+                    pageFaults++;
+                    step.isPageFault = true;
+                    step.newPage = page;
+
+                    if (frames.length < frameCount) {
+                        frames.push(page);
+                        stack.push(page);
+                    } else {
+                        const lastPage = stack.pop();
+                        const index = frames.indexOf(lastPage);
+                        step.replacedPage = lastPage;
+                        frames[index] = page;
+                        stack.push(page);
+                    }
+                }
+                step.framesAfter = [...frames];
+                steps.push(step);
+            }
+            return { steps, pageFaults, pageHits, hitRatio: ((pageHits / pages.length) * 100).toFixed(2) };
+        }
+
+        // Render visualization table
+        function renderTable(tableId, results, frameCount, showUpToStep = -1) {
+            const table = document.getElementById(tableId);
+            const steps = results.steps;
+            const maxStep = showUpToStep === -1 ? steps.length : showUpToStep + 1;
+
+            let html = '<thead><tr><th>Step</th>';
+            for (let i = 0; i < maxStep; i++) {
+                html += `<th>${i + 1}</th>`;
+            }
+            html += '</tr></thead><tbody>';
+
+            // Page reference row
+            html += '<tr><td>Page</td>';
+            for (let i = 0; i < maxStep; i++) {
+                const step = steps[i];
+                const cellClass = step.isPageFault ? 'page-fault' : 'page-hit';
+                html += `<td><span class="page-cell ${cellClass}">${step.page}</span></td>`;
+            }
+            html += '</tr>';
+
+            // Frame rows
+            for (let f = 0; f < frameCount; f++) {
+                html += `<tr><td>Frame ${f + 1}</td>`;
+                for (let i = 0; i < maxStep; i++) {
+                    const step = steps[i];
+                    const frameValue = step.framesAfter[f];
+                    let cellClass = '';
+                    if (frameValue !== undefined) {
+                        if (step.newPage === frameValue && step.isPageFault) {
+                            cellClass = step.replacedPage !== null ? 'replaced' : 'new-entry';
+                        }
+                    }
+                    html += `<td class="frame-cell">`;
+                    if (frameValue !== undefined) {
+                        html += `<span class="frame-value ${cellClass}">${frameValue}</span>`;
+                    } else {
+                        html += '-';
+                    }
+                    html += '</td>';
+                }
+                html += '</tr>';
+            }
+
+            // Fault/Hit row
+            html += '<tr><td>Status</td>';
+            for (let i = 0; i < maxStep; i++) {
+                const step = steps[i];
+                html += `<td>${step.isPageFault ? '❌ Fault' : '✅ Hit'}</td>`;
+            }
+            html += '</tr>';
+
+            html += '</tbody>';
+            table.innerHTML = html;
+        }
+
+        // Render metrics
+        function renderMetrics(metricsId, results, totalPages) {
+            const container = document.getElementById(metricsId);
+            container.innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-value">${results.pageFaults}</div>
+                    <div class="metric-label">Page Faults</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${results.pageHits}</div>
+                    <div class="metric-label">Page Hits</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${results.hitRatio}%</div>
+                    <div class="metric-label">Hit Ratio</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${(100 - results.hitRatio).toFixed(2)}%</div>
+                    <div class="metric-label">Fault Ratio</div>
+                </div>
+            `;
+        }
+
+        // Update step info
+        function updateStepInfo(algo) {
+            const state = animationState[algo];
+            document.getElementById(`${algo}StepInfo`).textContent = 
+                `Step: ${state.currentStep} / ${state.totalSteps}`;
+        }
+
+        // Step forward
+        function stepForward(algo) {
+            const state = animationState[algo];
+            if (state.currentStep < state.totalSteps) {
+                state.currentStep++;
+                const frameCount = parseInt(document.getElementById('frameCount').value);
+                renderTable(`${algo}Table`, state.results, frameCount, state.currentStep - 1);
+                updateStepInfo(algo);
+            }
+        }
+
+        // Step back
+        function stepBack(algo) {
+            const state = animationState[algo];
+            if (state.currentStep > 0) {
+                state.currentStep--;
+                const frameCount = parseInt(document.getElementById('frameCount').value);
+                if (state.currentStep === 0) {
+                    document.getElementById(`${algo}Table`).innerHTML = '';
+                } else {
+                    renderTable(`${algo}Table`, state.results, frameCount, state.currentStep - 1);
+                }
+                updateStepInfo(algo);
+            }
+        }
+
+        // Play animation
+        function playAnimation(algo) {
+            pauseAnimation(algo);
+            const state = animationState[algo];
+            const speed = document.getElementById(`${algo}Speed`).value;
+            
+            state.interval = setInterval(() => {
+                if (state.currentStep < state.totalSteps) {
+                    stepForward(algo);
+                } else {
+                    pauseAnimation(algo);
+                }
+            }, 2100 - speed);
+        }
+
+        // Pause animation
+        function pauseAnimation(algo) {
+            const state = animationState[algo];
+            if (state.interval) {
+                clearInterval(state.interval);
+                state.interval = null;
+            }
+        }
+
+        // Run simulation
+        function runSimulation() {
+            const pages = parsePageSequence();
+            const frameCount = parseInt(document.getElementById('frameCount').value);
+            const algorithm = document.getElementById('algorithm').value;
+
+            if (pages.length === 0) {
+                alert('Please enter a valid page sequence');
+                return;
+            }
+
+            if (frameCount < 1) {
+                alert('Please enter a valid number of frames');
+                return;
+            }
+
+            // Show results container
+            document.getElementById('resultsContainer').classList.remove('hidden');
+
+            // Hide all result cards first
+            document.getElementById('fifoResult').classList.add('hidden');
+            document.getElementById('lruResult').classList.add('hidden');
+            document.getElementById('optimalResult').classList.add('hidden');
+            document.getElementById('lfuResult').classList.add('hidden');
+            document.getElementById('mfuResult').classList.add('hidden');
+            document.getElementById('nruResult').classList.add('hidden');
+            document.getElementById('lifoResult').classList.add('hidden');
+
+            // Run selected algorithm(s)
+            if (algorithm === 'all' || algorithm === 'fifo') {
+                const fifoResults = fifoAlgorithm(pages, frameCount);
+                animationState.fifo = {
+                    currentStep: 0,
+                    totalSteps: fifoResults.steps.length,
+                    interval: null,
+                    results: fifoResults
+                };
+                document.getElementById('fifoResult').classList.remove('hidden');
+                renderTable('fifoTable', fifoResults, frameCount);
+                renderMetrics('fifoMetrics', fifoResults, pages.length);
+                animationState.fifo.currentStep = fifoResults.steps.length;
+                updateStepInfo('fifo');
+            }
+
+            if (algorithm === 'all' || algorithm === 'lru') {
+                const lruResults = lruAlgorithm(pages, frameCount);
+                animationState.lru = {
+                    currentStep: 0,
+                    totalSteps: lruResults.steps.length,
+                    interval: null,
+                    results: lruResults
+                };
+                document.getElementById('lruResult').classList.remove('hidden');
+                renderTable('lruTable', lruResults, frameCount);
+                renderMetrics('lruMetrics', lruResults, pages.length);
+                animationState.lru.currentStep = lruResults.steps.length;
+                updateStepInfo('lru');
+            }
+
+            if (algorithm === 'all' || algorithm === 'optimal') {
+                const optimalResults = optimalAlgorithm(pages, frameCount);
+                animationState.optimal = {
+                    currentStep: 0,
+                    totalSteps: optimalResults.steps.length,
+                    interval: null,
+                    results: optimalResults
+                };
+                document.getElementById('optimalResult').classList.remove('hidden');
+                renderTable('optimalTable', optimalResults, frameCount);
+                renderMetrics('optimalMetrics', optimalResults, pages.length);
+                animationState.optimal.currentStep = optimalResults.steps.length;
+                updateStepInfo('optimal');
+            }
+
+            if (algorithm === 'all' || algorithm === 'lfu') {
+                const lfuResults = lfuAlgorithm(pages, frameCount);
+                animationState.lfu = { currentStep: 0, totalSteps: lfuResults.steps.length, interval: null, results: lfuResults };
+                document.getElementById('lfuResult').classList.remove('hidden');
+                renderTable('lfuTable', lfuResults, frameCount);
+                renderMetrics('lfuMetrics', lfuResults, pages.length);
+                animationState.lfu.currentStep = lfuResults.steps.length;
+                updateStepInfo('lfu');
+            }
+
+            if (algorithm === 'all' || algorithm === 'mfu') {
+                const mfuResults = mfuAlgorithm(pages, frameCount);
+                animationState.mfu = { currentStep: 0, totalSteps: mfuResults.steps.length, interval: null, results: mfuResults };
+                document.getElementById('mfuResult').classList.remove('hidden');
+                renderTable('mfuTable', mfuResults, frameCount);
+                renderMetrics('mfuMetrics', mfuResults, pages.length);
+                animationState.mfu.currentStep = mfuResults.steps.length;
+                updateStepInfo('mfu');
+            }
+
+            if (algorithm === 'all' || algorithm === 'nru') {
+                const nruResults = nruAlgorithm(pages, frameCount);
+                animationState.nru = { currentStep: 0, totalSteps: nruResults.steps.length, interval: null, results: nruResults };
+                document.getElementById('nruResult').classList.remove('hidden');
+                renderTable('nruTable', nruResults, frameCount);
+                renderMetrics('nruMetrics', nruResults, pages.length);
+                animationState.nru.currentStep = nruResults.steps.length;
+                updateStepInfo('nru');
+            }
+
+            if (algorithm === 'all' || algorithm === 'lifo') {
+                const lifoResults = lifoAlgorithm(pages, frameCount);
+                animationState.lifo = { currentStep: 0, totalSteps: lifoResults.steps.length, interval: null, results: lifoResults };
+                document.getElementById('lifoResult').classList.remove('hidden');
+                renderTable('lifoTable', lifoResults, frameCount);
+                renderMetrics('lifoMetrics', lifoResults, pages.length);
+                animationState.lifo.currentStep = lifoResults.steps.length;
+                updateStepInfo('lifo');
+            }
+        }
+
+        // Run comparison
+        function runComparison() {
+            const pages = parsePageSequence();
+            const frameCount = parseInt(document.getElementById('frameCount').value);
+
+            if (pages.length === 0) {
+                alert('Please enter a valid page sequence');
+                return;
+            }
+
+            // Run all algorithms
+            const fifoResults = fifoAlgorithm(pages, frameCount);
+            const lruResults = lruAlgorithm(pages, frameCount);
+            const optimalResults = optimalAlgorithm(pages, frameCount);
+            const lfuResults = lfuAlgorithm(pages, frameCount);
+            const mfuResults = mfuAlgorithm(pages, frameCount);
+            const nruResults = nruAlgorithm(pages, frameCount);
+            const lifoResults = lifoAlgorithm(pages, frameCount);
+
+            // Show comparison section
+            document.getElementById('comparisonSection').classList.remove('hidden');
+
+            // Render charts
+            renderBarChart('faultsChart', [
+                { label: 'FIFO', value: fifoResults.pageFaults, class: 'bar-fifo' },
+                { label: 'LRU', value: lruResults.pageFaults, class: 'bar-lru' },
+                { label: 'OPT', value: optimalResults.pageFaults, class: 'bar-optimal' },
+                { label: 'LFU', value: lfuResults.pageFaults, class: 'bar-lfu' },
+                { label: 'MFU', value: mfuResults.pageFaults, class: 'bar-mfu' },
+                { label: 'NRU', value: nruResults.pageFaults, class: 'bar-nru' },
+                { label: 'LIFO', value: lifoResults.pageFaults, class: 'bar-lifo' }
+            ]);
+
+            renderBarChart('hitRatioChart', [
+                { label: 'FIFO', value: parseFloat(fifoResults.hitRatio), class: 'bar-fifo' },
+                { label: 'LRU', value: parseFloat(lruResults.hitRatio), class: 'bar-lru' },
+                { label: 'OPT', value: parseFloat(optimalResults.hitRatio), class: 'bar-optimal' },
+                { label: 'LFU', value: parseFloat(lfuResults.hitRatio), class: 'bar-lfu' },
+                { label: 'MFU', value: parseFloat(mfuResults.hitRatio), class: 'bar-mfu' },
+                { label: 'NRU', value: parseFloat(nruResults.hitRatio), class: 'bar-nru' },
+                { label: 'LIFO', value: parseFloat(lifoResults.hitRatio), class: 'bar-lifo' }
+            ]);
+
+            // Also run simulation
+            document.getElementById('algorithm').value = 'all';
+            runSimulation();
+        }
+
+        // Render bar chart
+        function renderBarChart(chartId, data) {
+            const chart = document.getElementById(chartId);
+            const maxValue = Math.max(...data.map(d => d.value));
+            const chartHeight = 180;
+
+            let html = '';
+            data.forEach(item => {
+                const barHeight = maxValue > 0 ? (item.value / maxValue) * chartHeight : 0;
+                html += `
+                    <div class="bar-group">
+                        <div class="bar ${item.class}" style="height: ${barHeight}px;">
+                            <span class="bar-value">${item.value}</span>
+                        </div>
+                        <span class="bar-label">${item.label}</span>
+                    </div>
+                `;
+            });
+            chart.innerHTML = html;
+        }
+
+        // Reset simulation
+        function resetSimulation() {
+            // Clear animations
+            ['fifo','lru','optimal','lfu','mfu','nru','lifo'].forEach(a => pauseAnimation(a));
+
+            // Hide results
+            document.getElementById('resultsContainer').classList.add('hidden');
+            document.getElementById('comparisonSection').classList.add('hidden');
+
+            // Reset animation state
+            animationState = {
+                fifo: { currentStep: 0, totalSteps: 0, interval: null, results: null },
+                lru: { currentStep: 0, totalSteps: 0, interval: null, results: null },
+                optimal: { currentStep: 0, totalSteps: 0, interval: null, results: null },
+                lfu: { currentStep: 0, totalSteps: 0, interval: null, results: null },
+                mfu: { currentStep: 0, totalSteps: 0, interval: null, results: null },
+                nru: { currentStep: 0, totalSteps: 0, interval: null, results: null },
+                lifo: { currentStep: 0, totalSteps: 0, interval: null, results: null }
+            };
+
+            // Clear tables
+            ['fifo','lru','optimal','lfu','mfu','nru','lifo'].forEach(a => {
+                document.getElementById(`${a}Table`).innerHTML = '';
+            });
+        }
+
+        // Initialize with default values on load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Optional: Run initial simulation
+            // runSimulation();
+        });
+    </script>
+</body>
+</html>
