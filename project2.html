@@ -44,6 +44,36 @@
             font-size: 1.1rem;
         }
 
+        header h1 {
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        header p {
+            animation: fadeInUp 0.8s ease-out 0.3s both;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .input-section {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 15px;
