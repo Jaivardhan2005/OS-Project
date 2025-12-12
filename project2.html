@@ -142,35 +142,6 @@
             box-shadow: 0 5px 20px rgba(245, 87, 108, 0.4);
         }
 
-        .algorithm-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .tab-btn {
-            padding: 10px 20px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 25px;
-            background: transparent;
-            color: #8892b0;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 500;
-        }
-
-        .tab-btn.active {
-            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
-            border-color: transparent;
-            color: #fff;
-        }
-
-        .tab-btn:hover:not(.active) {
-            border-color: #3a7bd5;
-            color: #fff;
-        }
-
         .results-section {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -463,6 +434,22 @@
         .info-card p {
             color: #8892b0;
             line-height: 1.6;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #8892b0;
+        }
+
+        footer p {
+            margin: 5px 0;
+        }
+
+        footer .heart {
+            color: #ff6b6b;
         }
 
         .step-animation {
@@ -829,6 +816,11 @@
                 </div>
             </div>
         </div>
+
+        <footer>
+            <p>Made with <span class="heart">❤️</span> for Operating Systems Education</p>
+            <p>Page Replacement Algorithm Simulator &copy; 2025</p>
+        </footer>
     </div>
 
     <script>
@@ -1339,8 +1331,13 @@
                 return;
             }
 
-            if (frameCount < 1) {
-                alert('Please enter a valid number of frames');
+            if (frameCount < 1 || frameCount > 10) {
+                alert('Please enter a valid number of frames (1-10)');
+                return;
+            }
+
+            if (pages.length > 50) {
+                alert('Page sequence too long. Maximum 50 pages allowed.');
                 return;
             }
 
