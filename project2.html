@@ -536,11 +536,11 @@
             <div class="input-group">
                 <div class="input-field">
                     <label for="pageSequence">Page Reference String (comma-separated)</label>
-                    <input type="text" id="pageSequence" placeholder="e.g., 7,0,1,2,0,3,0,4,2,3,0,3,2" value="7,0,1,2,0,3,0,4,2,3,0,3,2">
+                    <input type="text" id="pageSequence" placeholder="e.g., 7,0,1,2,0,3,0,4,2,3,0,3,2" value="7,0,1,2,0,3,0,4,2,3,0,3,2" title="Enter page numbers separated by commas (max 50 pages)">
                 </div>
                 <div class="input-field">
                     <label for="frameCount">Number of Frames</label>
-                    <input type="number" id="frameCount" min="1" max="10" value="3">
+                    <input type="number" id="frameCount" min="1" max="10" value="3" title="Enter number of memory frames (1-10)">
                 </div>
                 <div class="input-field">
                     <label for="algorithm">Algorithm</label>
@@ -1539,6 +1539,27 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Optional: Run initial simulation
             // runSimulation();
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Enter key to run simulation
+            if (e.key === 'Enter' && !e.ctrlKey) {
+                runSimulation();
+            }
+            // Ctrl + Enter to compare all
+            if (e.key === 'Enter' && e.ctrlKey) {
+                runComparison();
+            }
+            // Escape to reset
+            if (e.key === 'Escape') {
+                resetSimulation();
+            }
+            // R key to generate random
+            if (e.key === 'r' && e.ctrlKey) {
+                e.preventDefault();
+                generateRandom();
+            }
         });
     </script>
 </body>
